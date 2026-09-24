@@ -77,7 +77,7 @@ def _stamp_provenance(
         if data.source_content_hash is None and content_hash is not None:
             data.source_content_hash = content_hash
 
-        for field_name in data.model_fields:
+        for field_name in type(data).model_fields:
             field_value = getattr(data, field_name, None)
             if field_value is not None:
                 _stamp_provenance(

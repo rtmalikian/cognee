@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 from cognee.modules.data.models.Data import Data
 
@@ -18,9 +18,17 @@ class PipelineRunInfo(BaseModel):
     model_config = {
         "arbitrary_types_allowed": True,
         "from_attributes": True,
-        # Add custom encoding handler for Data ORM model
-        "json_encoders": {Data: lambda d: d.to_json()},
     }
+
+    @field_serializer("payload", when_used="json")
+    def serialize_payload(self, value):
+        # Pydantic V2 replacement for the deprecated model_config "json_encoders".
+        # Data must be mentioned in typing to allow custom encoders for Data to be activated.
+        if isinstance(value, Data):
+            return value.to_json()
+        if isinstance(value, list):
+            return [item.to_json() if isinstance(item, Data) else item for item in value]
+        return value
 
 
 class PipelineRunStarted(PipelineRunInfo):

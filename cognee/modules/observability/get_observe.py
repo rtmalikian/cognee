@@ -1,4 +1,6 @@
 import functools
+import inspect
+import json
 
 from cognee.base_config import get_base_config
 from cognee.shared.logging_utils import get_logger
@@ -53,9 +55,6 @@ def _generation_input_payload(func, args, kwargs):
     so it keeps capturing the prompt if the adapter parameters are renamed. Skips
     ``self``/``response_model`` and non-string args (the response-model type, numeric
     options, the ``**kwargs`` dict). Returns None if the call can't be interpreted."""
-    import inspect
-    import json
-
     try:
         bound = inspect.signature(func).bind(*args, **kwargs)
         bound.apply_defaults()
@@ -169,9 +168,7 @@ def _wrap_with_otel(inner_decorator):
                             _set_generation_output(span, result)
                         return result
 
-                import asyncio
-
-                if asyncio.iscoroutinefunction(func):
+                if inspect.iscoroutinefunction(func):
                     return async_wrapper
                 return sync_wrapper
 
@@ -213,9 +210,7 @@ def _wrap_with_otel(inner_decorator):
             with tracer.start_as_current_span(f"cognee.observe.{func.__name__}"):
                 return wrapped(*args, **kwargs)
 
-        import asyncio
-
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             return async_wrapper
         return sync_wrapper
 
